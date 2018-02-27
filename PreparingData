@@ -1,0 +1,158 @@
+import java.util.*;
+import java.io.*;
+import java.net.URL;
+import java.io.BufferedInputStream;
+import java.io.FileOutputStream;
+import java.net.MalformedURLException;
+
+
+
+/* Plan for this class
+ * 1. Download data from url
+ * 2. Read data in java
+ * 3. Insert data into KML
+ */
+
+public class PreparingData {
+
+
+	public static void main(String[] args) throws IOException {
+		
+
+		 String url = "http://www.berndresch.com/download/work/physiological_data.csv";
+	      String file = "C:\\Users\\PC\\Desktop\\data.csv";
+
+	      BufferedInputStream bufferedIS = null;
+	      FileOutputStream fileOS = null;
+	      try {
+	        URL urlObj = new URL(url);
+	        bufferedIS = new BufferedInputStream(urlObj.openStream());
+	        fileOS = new FileOutputStream(file);
+
+	        int data = bufferedIS.read();
+	        while(data != -1){
+	          fileOS.write(data);
+	          data = bufferedIS.read();
+	        }
+	      } catch (MalformedURLException e) {
+	        e.printStackTrace();
+	      } catch (IOException e) {
+	          e.printStackTrace();
+	        }finally{
+	          try {
+	            if(fileOS != null){
+	              fileOS.close();
+	            }
+	          } catch (IOException e) {
+	            e.printStackTrace();
+	          }
+	          try {
+	            if(bufferedIS != null){
+	              bufferedIS.close();
+	            }
+	          } catch (IOException e) {
+	            e.printStackTrace();
+	          }
+	        }
+	        String fileName= "C:\\Users\\PC\\Desktop\\data.csv";
+	        File f= new File(fileName);
+
+	      List<List<String>> heartrate = new ArrayList<>();
+
+	      Scanner inputStream;
+	      
+	       try{
+	            inputStream = new Scanner(f);
+
+	            while(inputStream.hasNext()){
+	                String line= inputStream.next();
+	                String[] values = line.split(",");
+	                heartrate.add(Arrays.asList(values[1]));               
+	            }
+
+	            inputStream.close();
+	        }catch (FileNotFoundException e) {
+	            e.printStackTrace();
+	        }
+				int count = 0;
+				for (int i = 1; i <= heartrate.size(); i++){
+						count += 1;
+				}
+				System.out.println(count);
+				String[] coords = new String[count];
+				String[] heartR = new String[count];
+
+	        try{
+	            inputStream = new Scanner(f);
+
+							for (int i = 0; i < count; i++){
+									String line= inputStream.next();
+									String[] values = line.split(",");
+									// this adds the currently parsed line to the 2-dimensional string array
+									//phenomenonTime.add(Arrays.asList(values[0]));
+									String heartrateV = values[1];
+									String latitude = values[2];
+									String longitude = values[3];
+									String coordinates = latitude + "," + longitude;
+									coords[i] = coordinates;
+									heartR[i] = heartrateV;
+
+
+	            }					
+	            inputStream.close();
+	        }catch (FileNotFoundException e) {
+	            e.printStackTrace();
+					}
+	        
+	        String filePath = "C:\\Users\\PC\\Desktop\\kmlData.kml";
+	        
+			System.out.println("Creating KML File...");
+
+			String startKML = "" +
+					"<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+					"<kml xmlns=\"http://www.opengis.net/kml/2.2\" xmlns:gx=\"http://www.google.com/kml/ext/2.2\" " +
+							"xmlns:kml=\"http://www.opengis.net/kml/2.2\" xmlns:atom=\"http://www.w3.org/2005/Atom\">" +
+							"<Document>" +
+								"<Style>" +
+									"<PolyStyle>" +
+										"<color>ff0000cc</color>" +
+										"<colorMode>random</colorMode>" +
+									"</PolyStyle>" +
+								"</Style>";
+
+			String endKML = "" +
+					"</Document>" +
+					"</kml>";
+
+			String middleKML = "";
+
+			System.out.println(coords[1000]);
+	        for(int i = 1; i < coords.length; i++)
+	        {
+	        	middleKML += "" +
+	        "<Polygon id=\"ID\">" +
+	        	"<extrude>" + heartR[i] + "</extrude>" +
+	        	"<tessellate>0</tessellate>" +
+	        	"<altitudeMode>clampToGround</altitudeMode>" +
+	            "<outerBoundaryIs>" +
+	            	"<LinearRing>" +
+	            		"<coordinates>" + coords[i] + "</coordinates>" +
+	            	"</LinearRing>" +
+	            "</outerBoundaryIs>" +
+	            "<innerBoundaryIs>" +
+	            	"<LinearRing>" +
+	            		"<coordinates>" + coords[i] + "</coordinates>" +
+	            	"</LinearRing>" +
+	            "</innerBoundaryIs>" +
+	          "</Polygon>";
+	        }
+
+			String newKML = startKML + middleKML + endKML;
+			
+			FileWriter fileWriter = new FileWriter(filePath);
+			fileWriter.write(newKML);
+			fileWriter.close();
+
+
+	}//main
+}//class
